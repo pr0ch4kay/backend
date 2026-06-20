@@ -2,14 +2,14 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
-
+const reviewRoutes = require("./routes/review.routes");
 const authRoutes = require("./routes/auth.routes");
 
 const app = express();
 
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
-
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/auth", authRoutes);
 
 const start = async () => {
