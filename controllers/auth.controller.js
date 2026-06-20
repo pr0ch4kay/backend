@@ -1,44 +1,42 @@
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { sendCode } = require("../services/mail.service");
 
-const gen = () => Math.floor(100000 + Math.random()*900000).toString();
+// Генерация 6-значного кода
+const gen = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Проверяем, есть ли пользователь в БАЗЕ
+    // 1. Проверяем, есть ли пользователь
     const exists = await User.findOne({ email });
     if (exists) {
-      // Если есть — сразу возвращаем ответ и ЗАКАНЧИВАЕМ выполнение.
       return res.status(400).json({ msg: "Пользователь с таким email уже существует" });
     }
 
-    // 2. Хешируем пароль
+    // 2. Хешируем пароль и генерируем код
     const hash = await bcrypt.hash(password, 10);
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = gen();
 
-    // 3. Создаём пользователя в базе
+    // 3. Создаём пользователя
     await User.create({ name, email, password: hash, verificationCode: code });
 
-    // 4. Пытаемся отправить письмо (но если упадёт — сервер НЕ УПАДЁТ, а просто напишет в лог)
+    // 4. ПЫТАЕМСЯ ОТПРАВИТЬ ПИСЬМО (если не уйдет - сервер НЕ упадет)
     try {
+      console.log(`📧 Попытка отправить письмо на ${email} с кодом ${code}`);
       await sendCode(email, code);
+      console.log(`✅ Письмо успешно отправлено на ${email}`);
     } catch (emailError) {
-      console.error("Ошибка отправки письма, но пользователь уже создан:", emailError.message);
+      console.error(`❌ Ошибка отправки письма на ${email}:`, emailError.message);
+      // ВНИМАНИЕ: Мы не пробрасываем ошибку дальше, регистрация всё равно пройдёт!
     }
 
-    // ДОБАВЛЯЕМ ЭТУ СТРОКУ! Она выведет код прямо в логи Render
-    console.log("✅ КОД ДЛЯ ПОДТВЕРЖДЕНИЯ:", code);
-
-    // 5. Отправляем успешный ответ фронту
+    // 5. Возвращаем успешный ответ фронту
     res.json({ success: true, message: 'code sent' });
 
   } catch (error) {
-    // Это перехватит любую ошибку и не даст серверу упасть в 502
     console.error("Ошибка в регистрации:", error);
     res.status(500).json({ msg: "Ошибка сервера при регистрации" });
   }
@@ -48,18 +46,15 @@ exports.verify = async (req, res) => {
   const { email, code } = req.body;
   const user = await User.findOne({ email });
 
-  // 1. Если пользователь не найден
   if (!user) {
     return res.status(400).json({ msg: "Пользователь не найден" });
   }
 
-  // 2. ВРЕМЕННО: принимаем любой код для теста!
-  // Если код совпадает ИЛИ код равен "123456" (для теста) — пропускаем
-  if (user.verificationCode !== code && code !== "123456") {
+  // ВАЖНО: Сравниваем коды. Убедитесь, что в БД лежит строка!
+  if (user.verificationCode !== code) {
     return res.status(400).json({ msg: "wrong code" });
   }
 
-  // 3. Подтверждаем пользователя
   user.isVerified = true;
   user.verificationCode = null;
   await user.save();
@@ -68,16 +63,16 @@ exports.verify = async (req, res) => {
   return res.json({ success: true, token, user: { id: user._id, email: user.email } });
 };
 
-exports.login = async (req,res)=>{
-  const {email,password} = req.body;
-  const user = await User.findOne({email});
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
 
-  if(!user) return res.status(404).json({msg:"no user"});
-  if(!user.isVerified) return res.status(403).json({msg:"not verified"});
+  if (!user) return res.status(404).json({ msg: "no user" });
+  if (!user.isVerified) return res.status(403).json({ msg: "not verified" });
 
-  const ok = await bcrypt.compare(password,user.password);
-  if(!ok) return res.status(400).json({msg:"wrong pass"});
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) return res.status(400).json({ msg: "wrong pass" });
 
-  const token = jwt.sign({id:user._id,role:user.role},"secret",{expiresIn:"7d"});
-  res.json({success:true,token,user:{id:user._id,email:user.email}});
+  const token = jwt.sign({ id: user._id, role: user.role }, "secret", { expiresIn: "7d" });
+  res.json({ success: true, token, user: { id: user._id, email: user.email } });
 };
