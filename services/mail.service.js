@@ -1,16 +1,13 @@
 const nodemailer = require("nodemailer");
 
-// Ручная настройка Gmail через порт 587 (работает на Render)
+// Настройка для Яндекс.Почты (работает на Render без паролей приложений)
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // false для порта 587, true для порта 465
+  host: "smtp.yandex.ru",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false // Иногда помогает обойти блокировки
   }
 });
 
