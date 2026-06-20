@@ -17,7 +17,7 @@ exports.register = async (req,res)=>{
   await User.create({name,email,password:hash,verificationCode:code});
   await sendCode(email,code);
 
-  res.json({msg:"code sent"});
+  res.json({success:true,message:'code sent'});
 };
 
 exports.verify = async (req,res)=>{
@@ -31,7 +31,8 @@ exports.verify = async (req,res)=>{
   user.verificationCode = null;
   await user.save();
 
-  res.json({msg:"verified"});
+  const token = jwt.sign({id:user._id,email:user.email}, "secret",{expiresIn:"7d"});
+return res.json({success:true,token,user:{id:user._id,email:user.email}});
 };
 
 exports.login = async (req,res)=>{
@@ -45,5 +46,5 @@ exports.login = async (req,res)=>{
   if(!ok) return res.status(400).json({msg:"wrong pass"});
 
   const token = jwt.sign({id:user._id,role:user.role},"secret",{expiresIn:"7d"});
-  res.json({token});
+  res.json({success:true,token,user:{id:user._id,email:user.email}});
 };
