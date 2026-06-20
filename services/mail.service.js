@@ -1,15 +1,19 @@
 const nodemailer = require("nodemailer");
 
-// Настраиваем подключение к Gmail
+// Ручная настройка Gmail через порт 587 (работает на Render)
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // false для порта 587, true для порта 465
   auth: {
-    user: process.env.EMAIL,       // Берём из переменных окружения
-    pass: process.env.EMAIL_PASS   // Берём из переменных окружения
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // Иногда помогает обойти блокировки
   }
 });
 
-// Функция отправки кода
 const sendCode = async (email, code) => {
   try {
     const info = await transporter.sendMail({
@@ -19,10 +23,9 @@ const sendCode = async (email, code) => {
       text: `Ваш код для входа в личный кабинет: ${code}`,
     });
     console.log("✅ Письмо успешно отправлено на:", email);
-    return info;
   } catch (error) {
     console.error("❌ Ошибка отправки письма:", error.message);
-    throw error; // Пробрасываем ошибку, чтобы сервер знал о ней
+    throw error;
   }
 };
 
