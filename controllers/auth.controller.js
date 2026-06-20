@@ -44,19 +44,28 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.verify = async (req,res)=>{
-  const {email,code} = req.body;
-  const user = await User.findOne({email});
+exports.verify = async (req, res) => {
+  const { email, code } = req.body;
+  const user = await User.findOne({ email });
 
-  if(!user || user.verificationCode !== code)
-    return res.status(400).json({msg:"wrong code"});
+  // 1. Если пользователь не найден
+  if (!user) {
+    return res.status(400).json({ msg: "Пользователь не найден" });
+  }
 
+  // 2. ВРЕМЕННО: принимаем любой код для теста!
+  // Если код совпадает ИЛИ код равен "123456" (для теста) — пропускаем
+  if (user.verificationCode !== code && code !== "123456") {
+    return res.status(400).json({ msg: "wrong code" });
+  }
+
+  // 3. Подтверждаем пользователя
   user.isVerified = true;
   user.verificationCode = null;
   await user.save();
 
-  const token = jwt.sign({id:user._id,email:user.email}, "secret",{expiresIn:"7d"});
-return res.json({success:true,token,user:{id:user._id,email:user.email}});
+  const token = jwt.sign({ id: user._id, email: user.email }, "secret", { expiresIn: "7d" });
+  return res.json({ success: true, token, user: { id: user._id, email: user.email } });
 };
 
 exports.login = async (req,res)=>{
