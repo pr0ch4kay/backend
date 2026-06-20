@@ -15,7 +15,8 @@ exports.register = async (req,res)=>{
   const code = gen();
 
   await User.create({name,email,password:hash,verificationCode:code});
-  await sendCode(email,code);
+  console.log("📧 Сгенерированный код для пользователя", email, ":", code);
+  // await sendCode(email,code);
 
   res.json({success:true,message:'code sent'});
 };
