@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { sendCode } = require("../services/mail.service");
+const { sendCode } = require("../services/mail");
 
 // Генерация 6-значного кода
 const gen = () => Math.floor(100000 + Math.random() * 900000).toString();
