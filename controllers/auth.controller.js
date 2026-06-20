@@ -6,19 +6,39 @@ const { sendCode } = require("../services/mail.service");
 
 const gen = () => Math.floor(100000 + Math.random()*900000).toString();
 
-exports.register = async (req,res)=>{
-  const {name,email,password} = req.body;
-  const exists = await User.findOne({email});
-  if(exists) return res.status(400).json({msg:"exists"});
+exports.register = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
 
-  const hash = await bcrypt.hash(password,10);
-  const code = gen();
+    // 1. Проверяем, есть ли пользователь в БАЗЕ
+    const exists = await User.findOne({ email });
+    if (exists) {
+      // Если есть — сразу возвращаем ответ и ЗАКАНЧИВАЕМ выполнение.
+      return res.status(400).json({ msg: "Пользователь с таким email уже существует" });
+    }
 
-  await User.create({name,email,password:hash,verificationCode:code});
-  console.log("📧 Сгенерированный код для пользователя", email, ":", code);
-  // await sendCode(email,code);
+    // 2. Хешируем пароль
+    const hash = await bcrypt.hash(password, 10);
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-  res.json({success:true,message:'code sent'});
+    // 3. Создаём пользователя в базе
+    await User.create({ name, email, password: hash, verificationCode: code });
+
+    // 4. Пытаемся отправить письмо (но если упадёт — сервер НЕ УПАДЁТ, а просто напишет в лог)
+    try {
+      await sendCode(email, code);
+    } catch (emailError) {
+      console.error("Ошибка отправки письма, но пользователь уже создан:", emailError.message);
+    }
+
+    // 5. Отправляем успешный ответ фронту
+    res.json({ success: true, message: 'code sent' });
+
+  } catch (error) {
+    // Это перехватит любую ошибку и не даст серверу упасть в 502
+    console.error("Ошибка в регистрации:", error);
+    res.status(500).json({ msg: "Ошибка сервера при регистрации" });
+  }
 };
 
 exports.verify = async (req,res)=>{
