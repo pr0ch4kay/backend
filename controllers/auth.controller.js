@@ -31,6 +31,9 @@ exports.register = async (req, res) => {
       console.error("Ошибка отправки письма, но пользователь уже создан:", emailError.message);
     }
 
+    // ДОБАВЛЯЕМ ЭТУ СТРОКУ! Она выведет код прямо в логи Render
+    console.log("✅ КОД ДЛЯ ПОДТВЕРЖДЕНИЯ:", code);
+
     // 5. Отправляем успешный ответ фронту
     res.json({ success: true, message: 'code sent' });
 
