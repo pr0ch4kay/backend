@@ -4,6 +4,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const reviewRoutes = require("./routes/review.routes");
 const authRoutes = require("./routes/auth.routes");
+const bookingRoutes = require("./routes/booking.routes");
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 const start = async () => {
   try {
