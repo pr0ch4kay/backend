@@ -1,4 +1,4 @@
-const API_KEY = "sp_apikey_def25f50b512e6c619dbf55d4832d699456c482d95e89242cd10880d51445a56";
+const API_KEY = "sp_apikey_409b0104c3725b6143d6d6cc3e58cbd57c4c11aa8ef0ed072a5b09e5fa7fa962";
 
 export const sendCode = async (email, code) => {
   try {
