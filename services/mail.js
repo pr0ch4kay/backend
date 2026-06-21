@@ -7,7 +7,7 @@ export const sendCode = async (email, code) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${API_KEY}`
+        "Authorization": `Bearer ${RESEND_API_KEY}`
       },
       body: JSON.stringify({
         email: {
