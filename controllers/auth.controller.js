@@ -30,7 +30,6 @@ exports.register = async (req, res) => {
       console.log(`✅ Письмо успешно отправлено на ${email}`);
     } catch (emailError) {
       console.error(`❌ Ошибка отправки письма на ${email}:`, emailError.message);
-      // ВНИМАНИЕ: Мы не пробрасываем ошибку дальше, регистрация всё равно пройдёт!
     }
 
     // 5. Возвращаем успешный ответ фронту
@@ -50,7 +49,6 @@ exports.verify = async (req, res) => {
     return res.status(400).json({ msg: "Пользователь не найден" });
   }
 
-  // ВАЖНО: Сравниваем коды. Убедитесь, что в БД лежит строка!
   if (user.verificationCode !== code) {
     return res.status(400).json({ msg: "wrong code" });
   }
@@ -75,4 +73,18 @@ exports.login = async (req, res) => {
 
   const token = jwt.sign({ id: user._id, role: user.role }, "secret", { expiresIn: "7d" });
   res.json({ success: true, token, user: { id: user._id, email: user.email } });
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    // req.user приходит из middleware auth.js (мы добавим его в роут)
+    const user = await User.findById(req.user.id).select("-password -verificationCode");
+    if (!user) {
+      return res.status(404).json({ msg: "Пользователь не найден" });
+    }
+    res.json({ user });
+  } catch (error) {
+    console.error("Ошибка получения профиля:", error);
+    res.status(500).json({ msg: "Ошибка сервера" });
+  }
 };
