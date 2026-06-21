@@ -10,7 +10,7 @@ export const sendCode = async (email, code) => {
       body: JSON.stringify({
         email: email,
         sender_name: "Pure Aura",
-        sender_email: "noreply@unisender.com", // Можно заменить на твою почту, если есть верификация
+        sender_email: "rbikovetsu@gmail.com", // Можно заменить на твою почту, если есть верификация
         subject: "Код подтверждения для Pure Aura",
         body: `Ваш код для входа в личный кабинет: ${code}`
       })
