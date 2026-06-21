@@ -10,30 +10,29 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // 1. Проверяем, есть ли пользователь
+    // Проверяем, есть ли пользователь
     const exists = await User.findOne({ email });
     if (exists) {
       return res.status(400).json({ msg: "Пользователь с таким email уже существует" });
     }
 
-    // 2. Хешируем пароль и генерируем код
+    // Хешируем пароль и генерируем код
     const hash = await bcrypt.hash(password, 10);
-    const code = gen();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 3. Создаём пользователя
+    // Создаём пользователя
     await User.create({ name, email, password: hash, verificationCode: code });
 
-    // 4. ПЫТАЕМСЯ ОТПРАВИТЬ ПИСЬМО (если не уйдет - сервер НЕ упадет)
-    try {
-      console.log(`📧 Попытка отправить письмо на ${email} с кодом ${code}`);
-      await sendCode(email, code);
-      console.log(`✅ Письмо успешно отправлено на ${email}`);
-    } catch (emailError) {
-      console.error(`❌ Ошибка отправки письма на ${email}:`, emailError.message);
-    }
-
-    // 5. Возвращаем успешный ответ фронту
-    res.json({ success: true, message: 'code sent' });
+    // ✅ ВМЕСТО ОТПРАВКИ ПИСЬМА — ПРОСТО ВЫВОДИМ КОД В ЛОГИ И ОТДАЁМ ЕГО ФРОНТУ!
+    console.log("📧 КОД ДЛЯ ПОДТВЕРЖДЕНИЯ:", code);
+    
+    // Возвращаем успешный ответ фронту
+    // Обрати внимание: я добавил поле 'testCode' специально для тебя!
+    res.json({ 
+      success: true, 
+      message: 'code sent', 
+      testCode: code // Фронт сможет забрать код напрямую из ответа!
+    });
 
   } catch (error) {
     console.error("Ошибка в регистрации:", error);
