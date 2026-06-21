@@ -1,27 +1,29 @@
-const RESEND_API_KEY = "re_LQpHEJA9_hcdCvw3mKQY6LLiYTxUaJYun";
+const nodemailer = require("nodemailer");
 
-export const sendCode = async (email, code) => {
+// Почта Mail.ru (без ограничений, работает везде)
+const transporter = nodemailer.createTransport({
+  host: "smtp.mail.ru",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+const sendCode = async (email, code) => {
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`
-      },
-      body: JSON.stringify({
-        from: `"Pure Aura" <onboarding@resend.dev>`,
-        to: [email],
-        subject: "Код подтверждения Pure Aura",
-        text: `Ваш код для входа: ${code}`
-      })
+    const info = await transporter.sendMail({
+      from: `"Pure Aura" <${process.env.EMAIL}>`,
+      to: email,
+      subject: "Код подтверждения для Pure Aura",
+      text: `Ваш код для входа в личный кабинет: ${code}`,
     });
-
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Ошибка отправки");
-    
     console.log("✅ Письмо успешно отправлено на:", email);
   } catch (error) {
     console.error("❌ Ошибка отправки письма:", error.message);
     throw error;
   }
 };
+
+module.exports = { sendCode };
