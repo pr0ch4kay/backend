@@ -9,7 +9,7 @@ export const sendCode = async (email, code) => {
         "Authorization": `Bearer ${RESEND_API_KEY}`
       },
       body: JSON.stringify({
-        from: `"Pure Aura" <rbikovetsu@gmail.com>`,
+        from: `"Pure Aura" <onboarding@resend.dev>`,
         to: [email],
         subject: "Код подтверждения Pure Aura",
         text: `Ваш код для входа: ${code}`
